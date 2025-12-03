@@ -10,6 +10,9 @@ export { cn } from './class-merge'
 // Date
 export { getFormattedDate } from './date'
 
+// Latex heading
+export { renderMarkdownSnippet, extractHeadings } from './latex-in-heading'
+
 // Theme
 export { getTheme, listenThemeChange, setTheme } from './theme'
 

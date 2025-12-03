@@ -1,8 +1,6 @@
 ---
-import katex from 'katex'
-
 import { type TocItem } from '../../plugins/toc'
-import { cn } from '../../utils'
+import { cn, renderMarkdownSnippet } from '../../utils'
 
 interface Props {
   heading: TocItem
@@ -13,36 +11,8 @@ const {
 } = Astro.props
 // TODO: Temporary fix for the issue with the headings that end with link reference text
 const text = rawText.endsWith('#') ? rawText.slice(0, -1) : rawText
-
-const renderLatex = (content: string) => {
-  return content
-    .split(/(\$[^$]+\$)/g)
-    .map((part) => {
-      if (part.startsWith('$') && part.endsWith('$') && part.length > 2) {
-        try {
-          return katex.renderToString(part.slice(1, -1), {
-            throwOnError: false,
-            displayMode: false
-          })
-        } catch {
-          // Escape fallback content just in case
-          return part
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;')
-        }
-      }
-      return part
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-    })
-    .join('')
-}
+// Render the text using the simplified pipeline (supports LaTeX)
+const innerHtml = await renderMarkdownSnippet(text)
 ---
 
 <li>
@@ -57,7 +27,7 @@ const renderLatex = (content: string) => {
         depth > 2 && 'ps-7'
       )}
       href={`#${slug}`}
-      set:html={renderLatex(text)}
+      set:html={innerHtml}
     />
   </div>
   {
@@ -70,3 +40,9 @@ const renderLatex = (content: string) => {
     )
   }
 </li>
+
+
+
+
+
+

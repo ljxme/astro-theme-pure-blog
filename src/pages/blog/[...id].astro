@@ -2,6 +2,7 @@
 import { render, type CollectionEntry } from 'astro:content'
 
 import { getBlogCollection, sortMDByDate } from 'astro-pure/server'
+import { extractHeadings } from 'astro-pure/utils'
 import PostLayout from '@/layouts/BlogPost.astro'
 
 export const prerender = true
@@ -20,9 +21,29 @@ type Props = {
 }
 
 const { post, posts } = Astro.props
-const { Content, headings, remarkPluginFrontmatter } = await render(post)
+const { Content, headings: astroHeadings, remarkPluginFrontmatter } = await render(post)
+
+// Re-extract headings to preserve LaTeX delimiters
+const rawHeadings = extractHeadings(post.body ?? '')
+
+// Merge raw headings with Astro's headings to preserve slugs
+const headings = astroHeadings.map((heading, index) => {
+  // Try to find a matching raw heading
+  // We match by depth, but index alignment is the strongest signal if the extraction is perfect.
+  // However, extraction might miss some edge cases (e.g. setext headings, or weird formatting).
+  // If rawHeadings[index] exists and depth matches, use it.
+  const rawHeading = rawHeadings[index]
+  if (rawHeading && rawHeading.depth === heading.depth) {
+    return {
+      ...heading,
+      text: rawHeading.text
+    }
+  }
+  return heading
+})
 ---
 
 <PostLayout {post} {posts} {headings} {remarkPluginFrontmatter}>
   <Content />
 </PostLayout>
+
